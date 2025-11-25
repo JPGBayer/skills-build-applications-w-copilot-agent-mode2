@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth.models import User
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,10 +23,13 @@ class ActivityViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """Save activity and update user points"""
-        activity = serializer.save(user=self.request.user)
+        # Get or create a default user for demo purposes
+        user = self.request.user if self.request.user.is_authenticated else User.objects.get_or_create(username='demo_user')[0]
+        
+        activity = serializer.save(user=user)
         
         # Update user profile points
-        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        profile, created = UserProfile.objects.get_or_create(user=user)
         profile.total_points += activity.points
         profile.save()
 
